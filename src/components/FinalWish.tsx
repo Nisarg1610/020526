@@ -7,7 +7,14 @@ export default function FinalWish() {
   const [wish, setWish] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [showWishForm, setShowWishForm] = useState(false);
-  const [creditsFinished, setCreditsFinished] = useState(false);
+
+  useEffect(() => {
+    // Show wish form after 45 seconds so they don't have to wait for the full 80s scroll
+    const timer = setTimeout(() => {
+      setShowWishForm(true);
+    }, 45000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleSaveWish = async () => {
     if (!wish.trim()) return;
@@ -71,20 +78,16 @@ export default function FinalWish() {
       </div>
 
       <AnimatePresence>
-        {!creditsFinished && (
+        {!showWishForm && (
           <motion.div
             key="credits-container"
-            exit={{ opacity: 0, transition: { duration: 2 } }}
-            className="relative w-full overflow-hidden h-[70vh] flex flex-col items-center"
+            exit={{ opacity: 0, scale: 0.95, transition: { duration: 1.5 } }}
+            className="relative w-full overflow-hidden h-[75vh] flex flex-col items-center"
           >
             <motion.div
               initial={{ y: '100%' }}
-              animate={{ y: '-120%' }}
-              transition={{ duration: 50, ease: "linear" }}
-              onAnimationComplete={() => {
-                setCreditsFinished(true);
-                setShowWishForm(true);
-              }}
+              animate={{ y: '-110%' }}
+              transition={{ duration: 80, ease: "linear" }}
               className="text-center space-y-10 px-4"
             >
               {credits.map((line, i) => (
@@ -162,7 +165,7 @@ export default function FinalWish() {
       </AnimatePresence>
 
       {/* Progress Hint */}
-      {!showWishForm && !creditsFinished && (
+      {!showWishForm && (
         <div className="fixed bottom-10 left-0 right-0 flex justify-center pointer-events-none">
           <motion.div
             initial={{ opacity: 0 }}
