@@ -1,17 +1,12 @@
 {
   "name": "020526",
-  "short_name": "Birthday Quest",
+  "short_name": "Jadugars Birthday",
   "description": "Lets celebrate the birthday",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#121212",
   "theme_color": "#D4AF37",
   "icons": [
-    {
-      "src": "/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
     {
       "src": "/icon-512.png",
       "sizes": "512x512",
