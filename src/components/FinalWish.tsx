@@ -8,14 +8,6 @@ export default function FinalWish() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [showWishForm, setShowWishForm] = useState(false);
 
-  useEffect(() => {
-    // Show wish form after 45 seconds so they don't have to wait for the full 80s scroll
-    const timer = setTimeout(() => {
-      setShowWishForm(true);
-    }, 45000);
-    return () => clearTimeout(timer);
-  }, []);
-
   const handleSaveWish = async () => {
     if (!wish.trim()) return;
     await saveWish(wish);
@@ -86,8 +78,9 @@ export default function FinalWish() {
           >
             <motion.div
               initial={{ y: '80vh' }}
-              animate={{ y: '-120vh' }}
-              transition={{ duration: 80, ease: "linear", delay: 2 }}
+              animate={{ y: '-130vh' }}
+              transition={{ duration: 55, ease: "linear", delay: 2 }}
+              onAnimationComplete={() => setShowWishForm(true)}
               className="text-center space-y-10 px-4"
             >
               {credits.map((line, i) => (
