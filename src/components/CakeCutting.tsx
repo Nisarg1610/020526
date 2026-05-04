@@ -10,73 +10,26 @@ export default function CakeCutting({ onComplete }: { onComplete: () => void }) 
   const [cakeCut, setCakeCut] = useState(false);
   const [isListening, setIsListening] = useState(false);
 
-  const audioContext = useRef<AudioContext | null>(null);
-  const analyzer = useRef<AnalyserNode | null>(null);
-  const microphone = useRef<MediaStreamAudioSourceNode | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
+  const [isBlowing, setIsBlowing] = useState(false);
+  const blowTimeout = useRef<NodeJS.Timeout | null>(null);
 
-  // Cleanup audio on unmount
-  useEffect(() => {
-    return () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-      }
-      if (audioContext.current?.state !== 'closed') {
-        audioContext.current?.close();
-      }
-    };
-  }, []);
+  const startBlowing = () => {
+    setIsBlowing(true);
+    blowTimeout.current = setTimeout(() => {
+      setCandlesOut(true);
+      setIsBlowing(false);
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#FFC0CB', '#FF69B4', '#FFFFFF', '#FFD700']
+      });
+    }, 1500); // 1.5 seconds of "blowing" to put out candles
+  };
 
-  const startBlowingDetection = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      streamRef.current = stream;
-      audioContext.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-      analyzer.current = audioContext.current.createAnalyser();
-      microphone.current = audioContext.current.createMediaStreamSource(stream);
-      microphone.current.connect(analyzer.current);
-      analyzer.current.fftSize = 512;
-
-      setIsListening(true);
-      const dataArray = new Uint8Array(analyzer.current.frequencyBinCount);
-
-      const checkBlowing = () => {
-        if (candlesOut) return;
-
-        analyzer.current?.getByteFrequencyData(dataArray);
-        const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
-
-        // 60 is a good threshold for blowing directly into a phone/laptop mic
-        if (average > 60) {
-          setIsListening(false);
-          setCandlesOut(true);
-
-          // Small delay for realism before confetti pops
-          setTimeout(() => {
-            confetti({
-              particleCount: 100,
-              spread: 70,
-              origin: { y: 0.6 },
-              colors: ['#FFC0CB', '#FF69B4', '#FFFFFF', '#FFD700']
-            });
-          }, 300);
-
-          stream.getTracks().forEach(track => track.stop());
-        } else {
-          requestAnimationFrame(checkBlowing);
-        }
-      };
-
-      checkBlowing();
-    } catch (err) {
-      console.error("Mic access denied", err);
-      // Fallback: If no mic, auto-blow after 3 seconds so she isn't stuck
-      setIsListening(true);
-      setTimeout(() => {
-        setIsListening(false);
-        setCandlesOut(true);
-      }, 3000);
-    }
+  const stopBlowing = () => {
+    setIsBlowing(false);
+    if (blowTimeout.current) clearTimeout(blowTimeout.current);
   };
 
   const handleCut = (_: any, info: any) => {
@@ -106,7 +59,7 @@ export default function CakeCutting({ onComplete }: { onComplete: () => void }) 
         </h2>
         <p className="text-stone-600 text-lg h-8">
           {!candlesOut
-            ? (isListening ? "Listening... blow on your screen!" : "Tap the button, close your eyes, and blow")
+            ? (isBlowing ? "💨 Blowing... keep holding!" : "Hold the button below to blow out the candles")
             : !cakeCut
               ? "Drag the knife across to cut the cake"
               : "Wishing you the sweetest year ahead ✨"}
@@ -115,20 +68,17 @@ export default function CakeCutting({ onComplete }: { onComplete: () => void }) 
 
       {/* Interactive Cake Area */}
       <div className="relative w-80 h-80 flex items-center justify-center mb-12">
-
         {/* Decorative Plate */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-stone-200 rounded-full shadow-xl border-4 border-white z-0" />
 
         {/* The Cake (Split into two halves for realistic cutting) */}
         <div className="relative w-full h-full flex z-10 shadow-2xl rounded-full bg-rose-100 border-8 border-white">
-
           {/* Left Half */}
           <motion.div
             animate={cakeCut ? { x: -15, rotate: -3 } : { x: 0, rotate: 0 }}
             transition={{ type: "spring", stiffness: 100, damping: 15 }}
             className="w-1/2 h-full bg-rose-300 rounded-l-full relative overflow-hidden border-r-2 border-rose-400/30 shadow-[inset_10px_0_20px_rgba(255,255,255,0.5)]"
           >
-            {/* Frosting drips */}
             <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_30%_30%,_#fecdd3_0%,_transparent_60%)]" />
           </motion.div>
 
@@ -141,7 +91,7 @@ export default function CakeCutting({ onComplete }: { onComplete: () => void }) 
             <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_70%_30%,_#fecdd3_0%,_transparent_60%)]" />
           </motion.div>
 
-          {/* Happy Birthday Text perfectly centered on top */}
+          {/* Happy Birthday Text centered on top */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <span className="text-rose-600/80 font-bold text-3xl font-serif rotate-[-10deg]">HB Day!</span>
           </div>
@@ -151,29 +101,25 @@ export default function CakeCutting({ onComplete }: { onComplete: () => void }) 
         <div className="absolute top-12 left-1/2 -translate-x-1/2 flex justify-center gap-6 z-20">
           {[1, 2, 3].map((i) => (
             <div key={i} className="relative w-3 h-14 bg-gradient-to-b from-rose-100 to-white rounded-t-full shadow-sm border border-stone-200">
-
-              {/* Flame & Smoke */}
               <AnimatePresence>
                 {!candlesOut ? (
                   <motion.div
                     exit={{ opacity: 0, scale: 0 }}
                     className="absolute -top-8 left-1/2 -translate-x-1/2 origin-bottom"
                   >
-                    {/* Realistic Glow */}
                     <div className="absolute inset-0 bg-orange-400 blur-md rounded-full scale-150 opacity-60 animate-pulse" />
-                    {/* The Flame */}
                     <motion.div
                       animate={{
-                        scale: [1, 1.1, 0.9, 1],
-                        rotate: [0, 2, -2, 0],
-                        skewX: [0, 5, -5, 0]
+                        scale: isBlowing ? [1, 1.4, 0.8, 1.2] : [1, 1.1, 0.9, 1],
+                        rotate: isBlowing ? [0, 10, -10, 0] : [0, 2, -2, 0],
+                        skewX: isBlowing ? [0, 15, -15, 0] : [0, 5, -5, 0],
+                        opacity: isBlowing ? [1, 0.7, 1] : 1
                       }}
-                      transition={{ repeat: Infinity, duration: Math.random() * 0.5 + 0.5 }}
+                      transition={{ repeat: Infinity, duration: isBlowing ? 0.2 : 0.6 }}
                       className="relative w-4 h-8 bg-gradient-to-t from-orange-500 via-yellow-400 to-white rounded-[50%_50%_20%_20%]"
                     />
                   </motion.div>
                 ) : (
-                  // Smoke effect when blown out
                   <motion.div
                     initial={{ opacity: 0, y: 0 }}
                     animate={{ opacity: [0, 0.5, 0], y: -40, scale: 2 }}
@@ -208,29 +154,38 @@ export default function CakeCutting({ onComplete }: { onComplete: () => void }) 
       </div>
 
       {/* Controls Area */}
-      <div className="h-20 flex items-center justify-center mt-4 z-10">
+      <div className="h-24 flex flex-col items-center justify-center mt-4 z-10 w-full max-w-xs">
         {!candlesOut ? (
-          <button
-            onClick={startBlowingDetection}
-            disabled={isListening}
-            className={`px-8 py-4 rounded-full font-bold shadow-lg flex items-center gap-3 transition-all duration-300 ${isListening
-              ? 'bg-rose-100 text-rose-500 scale-95 shadow-inner'
-              : 'bg-rose-600 text-white hover:scale-105 hover:bg-rose-700'
+          <div className="w-full space-y-4">
+            <button
+              onMouseDown={startBlowing}
+              onMouseUp={stopBlowing}
+              onMouseLeave={stopBlowing}
+              onTouchStart={(e) => { e.preventDefault(); startBlowing(); }}
+              onTouchEnd={(e) => { e.preventDefault(); stopBlowing(); }}
+              className={`w-full py-6 rounded-2xl font-bold shadow-xl flex flex-col items-center justify-center gap-2 transition-all duration-300 select-none touch-none ${
+                isBlowing 
+                  ? 'bg-rose-500 text-white scale-95 shadow-inner' 
+                  : 'bg-rose-600 text-white active:scale-95'
               }`}
-          >
-            {isListening ? (
-              <>
-                <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity }}>
-                  <Mic size={20} />
-                </motion.div>
-                Listening...
-              </>
-            ) : (
-              <>
-                <Wind size={20} /> Turn on Mic to Blow
-              </>
+            >
+              <Wind size={32} className={isBlowing ? "animate-pulse" : ""} />
+              <span className="text-lg uppercase tracking-widest">
+                {isBlowing ? "Blowing..." : "Press & Hold to Blow"}
+              </span>
+            </button>
+            
+            {isBlowing && (
+              <div className="w-full h-1 bg-stone-200 rounded-full overflow-hidden">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: '100%' }}
+                  transition={{ duration: 1.5, ease: "linear" }}
+                  className="h-full bg-rose-500"
+                />
+              </div>
             )}
-          </button>
+          </div>
         ) : cakeCut ? (
           <motion.button
             initial={{ opacity: 0, scale: 0.8 }}
@@ -242,6 +197,7 @@ export default function CakeCutting({ onComplete }: { onComplete: () => void }) 
           </motion.button>
         ) : null}
       </div>
+
 
     </div>
   );
