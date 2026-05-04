@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "The 10-Level Birthday Quest",
-  description: "A special journey for a special someone.",
+  title: "Jadugars Birthday",
+  description: "Lets celebrate the birthday",
 };
 
 export default function RootLayout({
@@ -31,6 +31,9 @@ export default function RootLayout({
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#D4AF37" />
         <link rel="apple-touch-icon" href="/icon-192.png" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Jadugars Bday" />
       </head>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
