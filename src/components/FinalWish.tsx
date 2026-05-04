@@ -85,9 +85,9 @@ export default function FinalWish() {
             className="relative w-full overflow-hidden h-[75vh] flex flex-col items-center"
           >
             <motion.div
-              initial={{ y: '100%' }}
-              animate={{ y: '-110%' }}
-              transition={{ duration: 80, ease: "linear" }}
+              initial={{ y: '80vh' }}
+              animate={{ y: '-120vh' }}
+              transition={{ duration: 80, ease: "linear", delay: 2 }}
               className="text-center space-y-10 px-4"
             >
               {credits.map((line, i) => (
