@@ -554,7 +554,7 @@ function IntroPage({ onStart }: { onStart: () => void }) {
       </div>
       <h2 className="text-4xl text-rose-900 mb-4" style={{ fontFamily: "'Caveat', cursive", fontWeight: 700 }}>Are you ready?</h2>
       <p className="text-rose-700 text-lg mb-8 italic leading-relaxed">
-        I've hidden 6 memories behind these challenges. They aren't as easy as they look... but I know you can do it.
+        You have seen your past memories of your last two birthdays. Now it's time to see our memories, our journey, what we have created. But wait its not easy. You need to solve litlle puzzle to see which memorry pic is hidden behind and after seeing the pic try to remember that moment....
       </p>
       <button onClick={onStart} className="w-full py-5 bg-rose-600 text-white rounded-2xl font-bold text-xl shadow-xl active:scale-95 transition-all">
         Enter the Gallery
